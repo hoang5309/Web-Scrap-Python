@@ -78,76 +78,90 @@ def scraping (URL, rowData):
 # Scrapping NPIDB
 def scrapingNPI():
     filePath = filedialog.askdirectory()
-    newFile = filePath+'/'+'NBI Result.csv'
+    newFile = filePath+'/'+'NBI Result 2.csv'
     print(filePath)
     with open(newFile, 'w', newline='') as csvfile:
-        fieldnames = ['Legal business name', 'Doing business as', 'Address', 'Phone', 'Fax', 'Website', 'NPI', 'Link']
+        fieldnames = ['Legal business name', 'Doing business as', 'Address', 'City', 'State', 'ZIP', 'Phone', 'Fax', 'Website', 'NPI', 'Link']
         writer = csv.DictWriter(csvfile, fieldnames=fieldnames)
         writer.writeheader()
 
-        #writer.writerow({'first_name': 'Lovely', 'last_name': 'Spam'})
-        #writer.writerow({'first_name': 'Wonderful', 'last_name': 'Spam'})
+        for x in range(27):
+            if(x > 7):
+                print('Page: ' + str(x))
+                headers = requests.utils.default_headers()
+                headers.update({
+                    'User-Agent': 'Mozilla/5.0 (X11; Ubuntu; Linux x86_64; rv:52.0) Gecko/20100101 Firefox/52.0',
+                })
+                page = requests.get('https://npidb.org/organizations/transportation_services/ambulance_341600000x/?page='+str(x), headers=headers)
+                soup =BeautifulSoup(page.content,"lxml")
+                scrapingNPILabel = tk.Label(root, text= 'Loading...', fg='green', font=('helvetica', 12, 'bold'))
+                scrapingNPILabelCount = tk.Label(root, text= '0', fg='green', font=('helvetica', 12, 'bold'))
+                canvas1.create_window(100, 200, window=scrapingNPILabel)
+                canvas1.create_window(150, 200, window=scrapingNPILabelCount)
+                for table in soup.find_all('table', class_='table-hover'):
+                    trNumber = 1
+                    for tr in table.find_all('tr'):
+                        if(trNumber > 1):
+                            tdNumber = 1
+                            for td in tr.find_all('td'):
+                                if(tdNumber == 2):
+                                    for h2 in td.find_all('h2'):
+                                        for a in h2.find_all('a', href=True):
+                                            link = "https://npidb.org" + a['href']
+                                            pageDetail = requests.get(link, headers=headers)
+                                            soupDetail = BeautifulSoup(pageDetail.content,"lxml")
+                                            npi = ""
+                                            LBN = ""
+                                            DBN = ""
+                                            for panelx1 in soupDetail.find_all('div', class_="panelx-primary"):
+                                                for divCol in panelx1.find_all('div', class_='col-md-8'):
+                                                    addressTag = divCol.find('address', class_='lead')
+                                                    addressSpanCount = 0
+                                                    for addressSpan in addressTag.find_all('span'):
+                                                        addressSpanCount += 1
+                                                    if(addressSpanCount == 4):
+                                                        add = addressTag.findAll('span')[0]
+                                                        address = add.text
+                                                        city = addressTag.findAll('span')[1]
+                                                        state = addressTag.findAll('span')[2]
+                                                        zip = addressTag.findAll('span')[3]
+                                                    else:
+                                                        add1 = addressTag.findAll('span')[0] 
+                                                        add2 = addressTag.findAll('span')[1] 
+                                                        address = add1.text + " " + add2.text
+                                                        city = addressTag.findAll('span')[2]
+                                                        state = addressTag.findAll('span')[3]
+                                                        zip = addressTag.findAll('span')[4]
 
-        headers = requests.utils.default_headers()
-        headers.update({
-            'User-Agent': 'Mozilla/5.0 (X11; Ubuntu; Linux x86_64; rv:52.0) Gecko/20100101 Firefox/52.0',
-        })
-        page = requests.get('https://npidb.org/organizations/transportation_services/ambulance_341600000x/?page=1', headers=headers)
-        #soup = BeautifulSoup(page.content, 'html.parser')
-        soup =BeautifulSoup(page.content,"lxml")
-        scrapingNPILabel = tk.Label(root, text= 'Loading...', fg='green', font=('helvetica', 12, 'bold'))
-        scrapingNPILabelCount = tk.Label(root, text= '0', fg='green', font=('helvetica', 12, 'bold'))
-        canvas1.create_window(100, 200, window=scrapingNPILabel)
-        canvas1.create_window(150, 200, window=scrapingNPILabelCount)
-        for table in soup.find_all('table', class_='table-hover'):
-            trNumber = 1
-            for tr in table.find_all('tr'):
-                if(trNumber > 1):
-                    tdNumber = 1
-                    for td in tr.find_all('td'):
-                        if(tdNumber == 2):
-                            for h2 in td.find_all('h2'):
-                                for a in h2.find_all('a', href=True):
-                                    link = "https://npidb.org" + a['href']
-                                    pageDetail = requests.get(link, headers=headers)
-                                    soupDetail = BeautifulSoup(pageDetail.content,"lxml")
-                                    npi = ""
-                                    LBN = ""
-                                    DBN = ""
-                                    for panelx1 in soupDetail.find_all('div', class_="panelx-primary"):
-                                        for divCol in panelx1.find_all('div', class_='col-md-8'):
-                                            addressTag = divCol.find('address', class_='lead')
-                                            address = ""
-                                            for addressSpan in addressTag.find_all('span'):
-                                                address += addressSpan.text + " "
-                                            phone = divCol.find('span', itemprop="telephone")
-                                            fax = divCol.find('span', itemprop="faxNumber")
-                                            website = divCol.find('span', itemprop="website")
-                                    panelInfoNumber = 1
-                                    for panelx2 in soupDetail.find_all('div', class_="panel-info"):
-                                        for table in panelx2.find_all('div', class_="table-responsive"):
-                                            LBNtr = table.findAll('tr')[1]
-                                            LBNTd = LBNtr.findAll('td')[1]
-                                            for nameElement in LBNTd.find_all('span'):
-                                                LBN = nameElement.text
-                                            npiTr = table.findAll('tr')[0]
-                                            for npiElement in npiTr.find_all('code'):
-                                                npi = npiElement.text
-                                            DBNtr = table.findAll('tr')[2]
-                                            print(DBNtr)
-                                            for DBNElement in DBNtr.find_all('strong'):
-                                                DBN = DBNElement.text
-                                                if(DBN == 'Authorized official'):
-                                                    DBN = LBN
-                                            print('>>>>>>>>>>>>>>>>>>>>>>')
-                                            print(trNumber)
-                                    writer.writerow({'Legal business name': LBN, 'Doing business as': DBN, 'Address': address, 'Phone': phone.text, 'Fax': fax.text, 'Website': "None", 'NPI': npi, 'Link': link})
-                                    time.sleep(2)
-                        tdNumber += 1
-                scrapingNPILabelCount.config(text = trNumber) 
-                trNumber += 1
-        finishLabel = tk.Label(root, text= 'DONE!', fg='green', font=('helvetica', 12, 'bold'))
-        canvas1.create_window(150, 220, window=finishLabel)
+                                                    phone = divCol.find('span', itemprop="telephone")
+                                                    fax = divCol.find('span', itemprop="faxNumber")
+                                                    website = divCol.find('span', itemprop="website")
+                                            panelInfoNumber = 1
+                                            for panelx2 in soupDetail.find_all('div', class_="panel-info"):
+                                                for table in panelx2.find_all('div', class_="table-responsive"):
+                                                    LBNtr = table.findAll('tr')[1]
+                                                    LBNTd = LBNtr.findAll('td')[1]
+                                                    for nameElement in LBNTd.find_all('span'):
+                                                        LBN = nameElement.text
+                                                    npiTr = table.findAll('tr')[0]
+                                                    for npiElement in npiTr.find_all('code'):
+                                                        npi = npiElement.text
+                                                    DBNtr = table.findAll('tr')[2]
+                                                    for DBNElement in DBNtr.find_all('strong'):
+                                                        DBN = DBNElement.text
+                                                        if(DBN == 'Authorized official'):
+                                                            DBN = LBN
+                                                    print('>>>>>>>>>>>>>>>>>>>>>>')
+                                                    print(trNumber)
+                                            writer.writerow({'Legal business name': LBN, 'Doing business as': DBN, 
+                                                             'Address': address, 'City': city.text, 'State': state.text, 'ZIP': zip.text,
+                                                             'Phone': phone.text, 'Fax': fax.text, 'Website': "None", 'NPI': npi, 'Link': link})
+                                            time.sleep(3)
+                                tdNumber += 1
+                        scrapingNPILabelCount.config(text = trNumber) 
+                        trNumber += 1
+                finishLabel = tk.Label(root, text= 'DONE!', fg='green', font=('helvetica', 12, 'bold'))
+                canvas1.create_window(150, 220, window=finishLabel)
 
 truePeopleSearchBtn = tk.Button(text='True People Search',command=selectFile, bg='brown',fg='white')
 AmbulanceBtn = tk.Button(text='Ambulance',command=scrapingNPI, bg='brown',fg='white')
