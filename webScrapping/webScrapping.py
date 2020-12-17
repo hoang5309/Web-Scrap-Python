@@ -183,7 +183,7 @@ def loopThroughAlphabet():
                 'v','w','x','y','z','0-9']
     pageNumber = 1
     for x in alphabet:
-        time.sleep(3)
+        time.sleep(2)
         loopThroughPaginator('https://www.crassociation.org/consumer-services/members/list/alpha/'+x)
 
     label1 = tk.Label(root, text= 'DONE!', fg='green', font=('helvetica', 12, 'bold'))
@@ -194,20 +194,18 @@ def loopThroughPaginator(link):
     headers.update({
         'User-Agent': 'Mozilla/5.0 (X11; Ubuntu; Linux x86_64; rv:52.0) Gecko/20100101 Firefox/52.0',
     })
+    getData(link)
     page2 = requests.get(link, headers=headers)
     soup2 = BeautifulSoup(page2.content,"lxml")
     for ul in soup2.find_all('div', class_='pagination-centered'):
-            print(ul)
             max =  len(ul.find_all('li'))
             nextBtn = ul.find_all('li')[max-2]
             if nextBtn.has_attr('class'):
-                print(nextBtn)
                 if nextBtn['class'][0] == 'disabled':
                     print("End of Paginator")
-                else:
-                    nextLink = nextBtn.findAll("a")[0]['href']
-                    print(nextLink)
-                    getData(nextLink)
+            else:
+                nextLink = nextBtn.findAll("a")[0]['href']
+                getData('https://www.crassociation.org/'+nextLink)
 
 def getData(link):
         print(link)
@@ -215,11 +213,15 @@ def getData(link):
         headers.update({
             'User-Agent': 'Mozilla/5.0 (X11; Ubuntu; Linux x86_64; rv:52.0) Gecko/20100101 Firefox/52.0',
         })
-        page3 = requests.get('https://www.crassociation.org/'+link, headers=headers)
+        page3 = requests.get(link, headers=headers)
         soup3 = BeautifulSoup(page3.content,"lxml")
         for h2 in soup3.find_all('h2', class_="page-header"):
+            time.sleep(2)
             dataLink = h2.find_all('a')[0]['href']
-            print(dataLink)
+            page4 = requests.get('https://www.crassociation.org/'+link, headers=headers)
+            soup4 = BeautifulSoup(page4.content,"lxml")
+            for SPdetail in soup4.find_all("div",  class_='SPDetailEntry'):
+                print("12/17/2020 - 12 54")
 
 
 truePeopleSearchBtn = tk.Button(text='True People Search',command=selectFile, bg='brown',fg='white')
