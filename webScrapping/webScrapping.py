@@ -10,7 +10,7 @@ from csv import reader
 
 root= tk.Tk()
 
-canvas1 = tk.Canvas(root, width = 300, height = 300)
+canvas1 = tk.Canvas(root, width = 400, height = 400)
 canvas1.pack()
     
 def selectFile ():
@@ -78,15 +78,15 @@ def scraping (URL, rowData):
 # Scrapping NPIDB
 def scrapingNPI():
     filePath = filedialog.askdirectory()
-    newFile = filePath+'/'+'NBI Result 2.csv'
+    newFile = filePath+'/'+'93 - 139.csv'
     print(filePath)
     with open(newFile, 'w', newline='') as csvfile:
         fieldnames = ['Legal business name', 'Doing business as', 'Address', 'City', 'State', 'ZIP', 'Phone', 'Fax', 'Website', 'NPI', 'Link']
         writer = csv.DictWriter(csvfile, fieldnames=fieldnames)
         writer.writeheader()
 
-        for x in range(27):
-            if(x > 7):
+        for x in range(140):
+            if(x > 92):
                 print('Page: ' + str(x))
                 headers = requests.utils.default_headers()
                 headers.update({
@@ -104,8 +104,8 @@ def scrapingNPI():
                     soup =BeautifulSoup(page.content,"lxml")
                     scrapingNPILabel = tk.Label(root, text= 'Loading...', fg='green', font=('helvetica', 12, 'bold'))
                     scrapingNPILabelCount = tk.Label(root, text= '0', fg='green', font=('helvetica', 12, 'bold'))
-                    canvas1.create_window(100, 200, window=scrapingNPILabel)
-                    canvas1.create_window(150, 200, window=scrapingNPILabelCount)
+                    canvas1.create_window(200, 200, window=scrapingNPILabel)
+                    canvas1.create_window(200, 200, window=scrapingNPILabelCount)
                     for table in soup.find_all('table', class_='table-hover'):
                         trNumber = 1
                         for tr in table.find_all('tr'):
@@ -171,10 +171,63 @@ def scrapingNPI():
                     finishLabel = tk.Label(root, text= 'DONE!', fg='green', font=('helvetica', 12, 'bold'))
                     canvas1.create_window(150, 220, window=finishLabel)
 
+# Scrapping Crassociation
+def loopThroughAlphabet():
+    headers = requests.utils.default_headers()
+    headers.update({
+        'User-Agent': 'Mozilla/5.0 (X11; Ubuntu; Linux x86_64; rv:52.0) Gecko/20100101 Firefox/52.0',
+    })
+    alphabet = ['a','b','c','d','e','f','g',
+                'h','i','j','k','l','m','n',
+                'o','p','q','r','s','t','u',
+                'v','w','x','y','z','0-9']
+    pageNumber = 1
+    for x in alphabet:
+        time.sleep(3)
+        loopThroughPaginator('https://www.crassociation.org/consumer-services/members/list/alpha/'+x)
+
+    label1 = tk.Label(root, text= 'DONE!', fg='green', font=('helvetica', 12, 'bold'))
+    canvas1.create_window(200, 300, window=label1)
+
+def loopThroughPaginator(link):
+    headers = requests.utils.default_headers()
+    headers.update({
+        'User-Agent': 'Mozilla/5.0 (X11; Ubuntu; Linux x86_64; rv:52.0) Gecko/20100101 Firefox/52.0',
+    })
+    page2 = requests.get(link, headers=headers)
+    soup2 = BeautifulSoup(page2.content,"lxml")
+    for ul in soup2.find_all('div', class_='pagination-centered'):
+            print(ul)
+            max =  len(ul.find_all('li'))
+            nextBtn = ul.find_all('li')[max-2]
+            if nextBtn.has_attr('class'):
+                print(nextBtn)
+                if nextBtn['class'][0] == 'disabled':
+                    print("End of Paginator")
+                else:
+                    nextLink = nextBtn.findAll("a")[0]['href']
+                    print(nextLink)
+                    getData(nextLink)
+
+def getData(link):
+        print(link)
+        headers = requests.utils.default_headers()
+        headers.update({
+            'User-Agent': 'Mozilla/5.0 (X11; Ubuntu; Linux x86_64; rv:52.0) Gecko/20100101 Firefox/52.0',
+        })
+        page3 = requests.get('https://www.crassociation.org/'+link, headers=headers)
+        soup3 = BeautifulSoup(page3.content,"lxml")
+        for h2 in soup3.find_all('h2', class_="page-header"):
+            dataLink = h2.find_all('a')[0]['href']
+            print(dataLink)
+
+
 truePeopleSearchBtn = tk.Button(text='True People Search',command=selectFile, bg='brown',fg='white')
 AmbulanceBtn = tk.Button(text='Ambulance',command=scrapingNPI, bg='brown',fg='white')
+CrassociationBtn = tk.Button(text='Crassociation',command=loopThroughAlphabet, bg='brown',fg='white')
 
-canvas1.create_window(150, 50, window=truePeopleSearchBtn)
-canvas1.create_window(150, 150, window=AmbulanceBtn)
+canvas1.create_window(200, 50, window=truePeopleSearchBtn)
+canvas1.create_window(200, 150, window=AmbulanceBtn)
+canvas1.create_window(200, 250, window=CrassociationBtn)
 
 root.mainloop()
