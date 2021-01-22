@@ -284,12 +284,22 @@ def getData(link, writer):
 # safer.fmcsa.dot.gov/CompanySnapshot.aspx 
 def trashComp1():
     saferfmcsaPath = filedialog.askdirectory()
-    saferfmcsaFile = saferfmcsaPath+'/'+'saferfmcsa.csv'
-    Keyword = ['sanitation', 'trash', 'recycling', 'refuse', 'disposal', 'garbage', 'collection']
-    Excells = ['Business Name']
+    Keyword = [ #'sanitation', 
+                #'trash' , 
+                #'recycling', 
+                'refuse', 'disposal', 'garbage', 'collection'
+    ]
     for x in Keyword:
+        saferfmcsaFile = saferfmcsaPath+'/'+x+'.csv'
+        with open(saferfmcsaFile, 'w', newline='') as csvfile:
+            fieldnames = ['Business Name', 'Entity Type', 'Operation Status', 'Out of Service Date', 'Legal Name',
+                       'DBA Name', 'Physical Address', 'Phone', 'Mailing Address', 'USDOT Number', 'State Carrier ID Number',
+                       'MC/MX/FF Number(s)', 'DUNS Number', 'Power Units', 'Drivers', 'MCS-150 Form Date', 'MCS-150 Mileage (Year)',
+                       'Operation Classification', 'Carrier Operation', 'Cargo Carried'
+                      ]
+            trashWriter = csv.DictWriter(csvfile, fieldnames=fieldnames)
+            trashWriter.writeheader()
             trCount1 = 0
-            time.sleep(2)
             headers = requests.utils.default_headers()
             headers.update({
                 'User-Agent': 'Mozilla/5.0 (X11; Ubuntu; Linux x86_64; rv:52.0) Gecko/20100101 Firefox/52.0',
@@ -298,112 +308,132 @@ def trashComp1():
             page = requests.get("https://safer.fmcsa.dot.gov/keywordx.asp?searchstring=%2A"+x+"%2A&SEARCHTYPE=", headers=headers)
             soup = BeautifulSoup(page.content,"lxml")
             table = soup.find_all('table')[2]
+            testCount = 0;
             for tr in table.find_all('tr'):
                 if(trCount1 > 0):
-                    for th in tr.find_all('th'):
-                        bussinessName = ""
-                        entityType = ""
-                        operationStatus = ""
-                        oosd = ""
-                        legalName = ""
-                        dbaName = ""
-                        physicalAddress = ""
-                        phone = ""
-                        mailingAddress = ""
-                        USDOTNumber = ""
-                        scidNumber = ""
-                        mcmxffNumber = ""
-                        DUNSNumber = ""
-                        powerUnit = ""
-                        driver = "" 
-                        formdate = ""
-                        mileage = ""
-                        oc = ""
-                        co = ""
-                        cc = ""
-                        b = th.find_all('b')[0]
-                        companyLink = b.findAll("a")[0]['href']
-                        companyPage = requests.get("https://safer.fmcsa.dot.gov/query.asp?searchtype=ANY&"+companyLink, headers=headers)
-                        companySoup = BeautifulSoup(companyPage.content,"lxml")
-                        font = companySoup.find_all('font')[1]
-                        bussinessName = font.find_all('b')[0].text
-                        detailTable = companySoup.find_all('table')[6]
-                        # entity
-                        entityType = detailTable.find_all('tr')[1].find_all('td')[0].text.replace(" ", "")
-                        # operation status & Out of Service Date
-                        operationStatus = detailTable.find_all('tr')[2].find_all('td')[0].text.replace(" ", "")
-                        oosd = detailTable.find_all('tr')[2].find_all('td')[1].text.replace(" ", "")
-                        # Legal Name
-                        legalName = detailTable.find_all('tr')[3].find_all('td')[0].text
-                        # DBA Name
-                        dbaName = detailTable.find_all('tr')[4].find_all('td')[0].text
-                        # Physical Address
-                        physicalAddress = detailTable.find_all('tr')[5].find_all('td')[0].text
-                        # Phone
-                        phone = detailTable.find_all('tr')[6].find_all('td')[0].text
-                        # Mailing Address
-                        mailingAddress = detailTable.find_all('tr')[7].find_all('td')[0].text
-                        # USDOT Number & State Carrier ID Number
-                        USDOTNumber = detailTable.find_all('tr')[8].find_all('td')[0].text
-                        scidNumber = detailTable.find_all('tr')[8].find_all('td')[1].text
-                        # MC/MX/FF Number(s) & DUNS Number
-                        mcmxffNumber = detailTable.find_all('tr')[9].find_all('td')[0].text
-                        DUNSNumber = detailTable.find_all('tr')[9].find_all('td')[1].text
-                        # Power Units & Drivers
-                        powerUnit = detailTable.find_all('tr')[10].find_all('td')[0].text
-                        driver = detailTable.find_all('tr')[10].find_all('td')[1].text
-                        # MCS-150 Form Date & MCS-150 Mileage (Year)
-                        formdate = detailTable.find_all('tr')[11].find_all('td')[0].text
-                        mileage = detailTable.find_all('tr')[11].find_all('td')[1].text
-                        # Operation Classification:
-                        OCTable =  detailTable.find_all('tr')[13].find_all('td')[0].find_all('table')[0]
-                        OCTr = OCTable.find_all('tr')[1]
-                        for td in OCTr.find_all('td'):
-                            if td.find("table"):
-                                TDTable = td.find_all('table')[0]
-                                TRTableCount = 0
-                                for tr in TDTable.find_all('tr'):
-                                    if(TRTableCount > 0):
-                                        if(tr.find_all('td')[0].text == "X"):
-                                            oc += tr.find_all('td')[1].find_all("font")[0].text + " - "
-                                    TRTableCount += 1
-                        # Carrier Operation:
-                        COTable =  detailTable.find_all('tr')[32].find_all('td')[0].find_all('table')[0]
-                        COTr = COTable.find_all('tr')[1]
-                        for td in COTr.find_all('td'):
-                            if td.find("table"):
-                                TDTable = td.find_all('table')[0]
-                                TRTableCount = 0
-                                for tr in TDTable.find_all('tr'):
-                                    if(TRTableCount > 0):
-                                        if(tr.find_all('td')[0].text == "X"):
-                                            co += tr.find_all('td')[1].find_all("font")[0].text + " - "
-                                    TRTableCount += 1
-                        # Cargo Carried:
-                        # print(detailTable.find_all('tr')[43])
-                        CCTable =  detailTable.find_all('tr')[43].find_all('td')[0].find_all('table')[0]
-                        CCTr = CCTable.find_all('tr')[1]
-                        for td in CCTr.find_all('td'):
-                            if td.find("table"):
-                                TDTable = td.find_all('table')[0]
-                                TRTableCount = 0
-                                for tr in TDTable.find_all('tr'):
-                                    if(TRTableCount > 0):
-                                        #print(tr)
-                                        #print(">>>>>>>>>>")
-                                        if(tr.find_all('td')[0].text == "X"):
-                                            if tr.find_all('td')[1].find("font"):
-                                                cc += tr.find_all('td')[1].find_all("font")[0].text + " - "
-                                            else:
-                                                cc += tr.find_all('td')[1].text + " - "
-                                    TRTableCount += 1
-                        print(cc)
-                        time.sleep(2)
+                    if(testCount < 5000):
+                        print(testCount)
+                        testCount += 1
+                        for th in tr.find_all('th'):
+                            bussinessName = ""
+                            entityType = ""
+                            operationStatus = ""
+                            oosd = ""
+                            legalName = ""
+                            dbaName = ""
+                            physicalAddress = ""
+                            phone = ""
+                            mailingAddress = ""
+                            USDOTNumber = ""
+                            scidNumber = ""
+                            mcmxffNumber = ""
+                            DUNSNumber = ""
+                            powerUnit = ""
+                            driver = "" 
+                            formdate = ""
+                            mileage = ""
+                            oc = ""
+                            co = ""
+                            cc = ""
+                            b = th.find_all('b')[0]
+                            companyLink = b.findAll("a")[0]['href']
+                            companyPage = requests.get("https://safer.fmcsa.dot.gov/query.asp?searchtype=ANY&"+companyLink, headers=headers)
+                            companySoup = BeautifulSoup(companyPage.content,"lxml")
+                            font = companySoup.find_all('font')[1]
+                            bussinessName = font.find_all('b')[0].text
+                            detailTable = companySoup.find_all('table')[6]
+                            # entity
+                            entityType = detailTable.find_all('tr')[1].find_all('td')[0].text.replace(" ", "")
+                            # operation status & Out of Service Date
+                            operationStatus = detailTable.find_all('tr')[2].find_all('td')[0].text.replace(" ", "")
+                            oosd = detailTable.find_all('tr')[2].find_all('td')[1].text.replace(" ", "")
+                            # Legal Name
+                            legalName = detailTable.find_all('tr')[3].find_all('td')[0].text
+                            # DBA Name
+                            dbaName = detailTable.find_all('tr')[4].find_all('td')[0].text
+                            # Physical Address
+                            physicalAddress = detailTable.find_all('tr')[5].find_all('td')[0].text
+                            # Phone
+                            phone = detailTable.find_all('tr')[6].find_all('td')[0].text
+                            # Mailing Address
+                            mailingAddress = detailTable.find_all('tr')[7].find_all('td')[0].text
+                            # USDOT Number & State Carrier ID Number
+                            USDOTNumber = detailTable.find_all('tr')[8].find_all('td')[0].text
+                            scidNumber = detailTable.find_all('tr')[8].find_all('td')[1].text
+                            # MC/MX/FF Number(s) & DUNS Number
+                            mcmxffNumber = detailTable.find_all('tr')[9].find_all('td')[0].text
+                            DUNSNumber = detailTable.find_all('tr')[9].find_all('td')[1].text
+                            # Power Units & Drivers
+                            powerUnit = detailTable.find_all('tr')[10].find_all('td')[0].text
+                            driver = detailTable.find_all('tr')[10].find_all('td')[1].text
+                            # MCS-150 Form Date & MCS-150 Mileage (Year)
+                            formdate = detailTable.find_all('tr')[11].find_all('td')[0].text
+                            mileage = detailTable.find_all('tr')[11].find_all('td')[1].text
+                            # Operation Classification:
+                            OCTable =  detailTable.find_all('tr')[13].find_all('td')[0].find_all('table')[0]
+                            OCTr = OCTable.find_all('tr')[1]
+                            try:
+                                for td in OCTr.find_all('td'):
+                                    if td.find("table"):
+                                        TDTable = td.find_all('table')[0]
+                                        TRTableCount = 0
+                                        for tr in TDTable.find_all('tr'):
+                                            if(TRTableCount > 0):
+                                                if(tr.find_all('td')[0].text == "X"):
+                                                    if tr.find_all('td')[1].find("font"):
+                                                        oc += tr.find_all('td')[1].find_all("font")[0].text + " - "
+                                                    else:
+                                                        oc += tr.find_all('td')[1].text + " - "
+                                            TRTableCount += 1
+                            except:
+                                oc = "Error";
+                            # Carrier Operation:
+                            try:
+                                COTable =  detailTable.find_all('tr')[32].find_all('td')[0].find_all('table')[0]
+                                COTr = COTable.find_all('tr')[1]
+                                for td in COTr.find_all('td'):
+                                    if td.find("table"):
+                                        TDTable = td.find_all('table')[0]
+                                        TRTableCount = 0
+                                        for tr in TDTable.find_all('tr'):
+                                            if(TRTableCount > 0):
+                                                if(tr.find_all('td')[0].text == "X"):
+                                                    if tr.find_all('td')[1].find("font"):
+                                                        co += tr.find_all('td')[1].find_all("font")[0].text + " - "
+                                                    else:
+                                                        co += tr.find_all('td')[1].text + " - "
+                                            TRTableCount += 1
+                            except:
+                                co = "Error"
+                            # Cargo Carried:
+                            try:
+                                CCTable =  detailTable.find_all('tr')[43].find_all('td')[0].find_all('table')[0]
+                                CCTr = CCTable.find_all('tr')[1]
+                                for td in CCTr.find_all('td'):
+                                    if td.find("table"):
+                                        TDTable = td.find_all('table')[0]
+                                        TRTableCount = 0
+                                        for tr in TDTable.find_all('tr'):
+                                            if(TRTableCount > 0):
+                                                if(tr.find_all('td')[0].text == "X"):
+                                                    if tr.find_all('td')[1].find("font"):
+                                                        cc += tr.find_all('td')[1].find_all("font")[0].text + " - "
+                                                    else:
+                                                        cc += tr.find_all('td')[1].text + " - "
+                                            TRTableCount += 1
+                            except:
+                                cc = "Error"
+                        
+                            trashWriter.writerow({  'Business Name': bussinessName, 'Entity Type': entityType, 'Operation Status': operationStatus,
+                                'Out of Service Date': oosd, 'Legal Name': legalName, 'DBA Name': dbaName,
+                                'Physical Address': physicalAddress, 'Phone': phone, 'Mailing Address': mailingAddress, 'USDOT Number': USDOTNumber, 'State Carrier ID Number': scidNumber,
+                                'MC/MX/FF Number(s)': mcmxffNumber, 'DUNS Number': DUNSNumber, 'Power Units':powerUnit, 'Drivers':driver, 'MCS-150 Form Date': formdate,
+                                'MCS-150 Mileage (Year)': mileage, 'Operation Classification': oc, 'Carrier Operation': co, 'Cargo Carried': cc
+                            })
+                            print(bussinessName)
                 trCount1 += 1
-            
-
-    finishLabel = tk.Label(root, text= 'DONE!', fg='green', font=('helvetica', 12, 'bold'))
-    canvas1.create_window(200, 400, window=finishLabel)
+        finishLabel = tk.Label(root, text= 'DONE!', fg='green', font=('helvetica', 12, 'bold'))
+        canvas1.create_window(200, 400, window=finishLabel)
 
 truePeopleSearchBtn = tk.Button(text='True People Search',command=selectFile, bg='brown',fg='white')
 AmbulanceBtn = tk.Button(text='Ambulance',command=scrapingNPI, bg='brown',fg='white')
