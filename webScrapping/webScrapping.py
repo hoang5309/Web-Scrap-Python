@@ -8,6 +8,8 @@ import time
 import math
 from difflib import SequenceMatcher
 from csv import reader
+import os.path
+from os import path
 
 root= tk.Tk()
 
@@ -463,125 +465,131 @@ def trashComp2():
                     pageSoup = BeautifulSoup(pagePage.content,"lxml")
                     # Find How Many pages Each city have
                     totaCompanyCount = pageSoup.findAll("div", class_="summary")[0].find_all("b")[1].text
-                    pageCount = math.ceil(int(totaCompanyCount)/20)
+                    pageCount = math.ceil(int(totaCompanyCount.replace(',', ''))/20)
                     print(cityText)
                     print("Total Page: " + str(pageCount))
                     if not os.path.exists(dcontrolPath+'dcontrol/'+stateText):
-                                os.makedirs(dcontrolPath+'dcontrol/'+stateText)
-                    dcontrolFile = dcontrolPath + 'dcontrol/' + stateText + '/' + cityText + '.csv'
-                    with open(dcontrolFile, 'w', newline='') as csvfile:
-                        fieldnames =    [   'Business Name', 'Business Type', 
-                                            'Physical Address', 'Mailing Address', 'Telephone', 'Fax',
-                                            'Operation Status', 'USDOT Number', 
-                                            'MC Number', 'Out of Service Date', 'Entity Type', 'Legal Name',
-                                            'Bussiness Since', 'Total Trucks', 'Total Drivers', 'Carrier Operation',
-                                            'Hazardous Material', 'MCS-150 Mileage Year', 'MCS-150 DATE', 'MCS-150 MILEAGE',
-                                            'Cargo Hauled', 'Operation Classification'
-                                            # 'DBA Name', 'Physical Address', 'Phone', 'Mailing Address', 'State Carrier ID Number',
-                                            # 'MC/MX/FF Number(s)', 'DUNS Number', 'Power Units', 'Drivers', 'MCS-150 Form Date', 'MCS-150 Mileage (Year)',
-                                            # 'Operation Classification', 'Carrier Operation', 'Cargo Carried'
-                                        ]
-                        trashWriter = csv.DictWriter(csvfile, fieldnames=fieldnames)
-                        trashWriter.writeheader()
-                        for i in range(pageCount+1):
-                            if i > 0:
-                                print("Page: " + str(i))
-                                companyPage =  requests.get("https://dcontrol.com"+cityLink+'?page='+str(i), headers=headers)
-                                companySoup = BeautifulSoup(companyPage.content,"lxml")
-                                for company in companySoup.find_all("div", class_='advanced-item'):
-                                    if(company.find("a")):
-                                        companyLink = company.find_all("a")[0]['href']
-                                        companyText = company.find_all("a")[0].text
-                                        # Get Detail
-                                        detailPage =  requests.get("https://dcontrol.com"+companyLink, headers=headers)
-                                        detailSoup = BeautifulSoup(detailPage.content,"lxml")
-                                        # Variable >>>>>>>>>>>>>
-                                        bussinessName = ""
-                                        bussinessType = ""
-                                        operatingStatus = ""
-                                        usdot = ""
-                                        mcNumber = ""
-                                        oosd = ""
-                                        entityType = ""
-                                        legalName = ""
-                                        bussinessSince = ""
-                                        totalTrucks = ""
-                                        totalDrivers = ""
-                                        co = ""
-                                        hm = ""
-                                        mileage = ""
-                                        mcDate = ""
-                                        mcsMileage = ""
-                                        cargoHauled = ""
-                                        oc = ""
-                                        physicalAddress = ""
-                                        mailingAddress = ""
-                                        phone = ""
-                                        fax = ""
-                                        # Variable >>>>>>>>>>>>>
-                                        # <<<<<<<<<<< Business Name/Business Type >>>>>>>>>>>>>
-                                        profileDiv = detailSoup.findAll("div", class_="bg-white padding-10 margin-bottom-10 margin-top-10")[0]
-                                        bussinessName = profileDiv.findAll("h1")[0].text
-                                        bussinessType = profileDiv.findAll("h3")[0].text
-                                        # <<<<<<<<<<< Table 01 >>>>>>>>>>>>>
-                                        table01 = detailSoup.find_all("table")[0]
-                                        for tr in table01.find_all('tr'):
-                                            if tr.find_all("td")[0].text == "Operating Status":
-                                                operatingStatus = tr.find_all("td")[1].find_all("b")[0].text
-                                            elif tr.find_all("td")[0].text == "USDOT":
-                                                usdot = tr.find_all("td")[1].text
-                                            elif tr.find_all("td")[0].text == "MC NUMBER":
-                                                mcNumber = tr.find_all("td")[1].text
-                                            elif tr.find_all("td")[0].text == "Out of Service Date":
-                                                oosd = tr.find_all("td")[1].text
-                                            elif tr.find_all("td")[0].text == "Entity Type":
-                                                entityType = tr.find_all("td")[1].text
-                                            elif tr.find_all("td")[0].text == "Legal Name":
-                                                legalName = tr.find_all("td")[1].text
-                                            elif tr.find_all("td")[0].text == "Business since":
-                                                bussinessSince = tr.find_all("td")[1].text
-                                            elif tr.find_all("td")[0].text == "Total Trucks":
-                                                totalTrucks = tr.find_all("td")[1].text
-                                            elif tr.find_all("td")[0].text == "Total Drivers":
-                                                totalDrivers = tr.find_all("td")[1].text
-                                            elif tr.find_all("td")[0].text == "Carrier Operation":
-                                                co = tr.find_all("td")[1].text
-                                            elif tr.find_all("td")[0].text == "Hazardous Material":
-                                                hm = tr.find_all("td")[1].text
-                                            elif tr.find_all("td")[0].text == "MCS-150 Mileage Year":
-                                                mileage = tr.find_all("td")[1].text
-                                            elif tr.find_all("td")[0].text == "MCS-150 DATE":
-                                                mcDate = tr.find_all("td")[1].text
-                                            elif tr.find_all("td")[0].text == "MCS-150 MILEAGE":
-                                                mcsMileage = tr.find_all("td")[1].text
-                                        for boxDiv in detailSoup.find_all("div", class_="box"):
-                                            if boxDiv.find("div", class_="box-header with-border"):
-                                                if "Cargo Hauled" in boxDiv.findAll("div", class_="box-header with-border")[0].find_all("h3")[0].text:
-                                                    for span in boxDiv.findAll("table", class_="table table-bordered")[0].findAll('tr')[0].findAll('td')[0].find_all('span'):
-                                                        cargoHauled += span.text + " - "
-                                                if "Operation Classification" in boxDiv.findAll("div", class_="box-header with-border")[0].find_all("h3")[0].text:
-                                                    for span in boxDiv.findAll("table", class_="table table-bordered")[0].findAll('tr')[0].findAll('td')[0].find_all('span'):
-                                                        oc += span.text + " - "
-                                                if "Physical and Mailing information" in boxDiv.findAll("div", class_="box-header with-border")[0].find_all("h3")[0].text:
-                                                    for tr in boxDiv.findAll("table", class_="table table-bordered")[0].find_all('tr'):
-                                                        if tr.find_all("td")[0].text == "Physical Address":
-                                                            physicalAddress = tr.find_all("td")[1].text
-                                                        elif tr.find_all("td")[0].text == "Mailing Address":
-                                                            mailingAddress = tr.find_all("td")[1].text
-                                                        elif tr.find_all("td")[0].text == "Telephone":
-                                                            phone = tr.find_all("td")[1].text
-                                                        elif tr.find_all("td")[0].text == "Fax":
-                                                            fax = tr.find_all("td")[1].text
-                                        print(bussinessName)
-                                        trashWriter.writerow({  
-                                            'Business Name': bussinessName, 'Business Type': bussinessType, 
-                                            'Physical Address': physicalAddress, 'Mailing Address': mailingAddress, 'Telephone': phone, 'Fax': fax,
-                                            'Operation Status': operatingStatus, 'USDOT Number': usdot,
-                                            'MC Number': mcNumber, 'Out of Service Date': oosd, 'Entity Type': entityType, 'Legal Name': legalName,
-                                            'Bussiness Since': bussinessSince, 'Total Trucks': totalTrucks, 'Total Drivers': totalDrivers, 'Carrier Operation': co,
-                                            'Hazardous Material': hm, 'MCS-150 Mileage Year': mileage, 'MCS-150 DATE': mcDate, 'MCS-150 MILEAGE': mcsMileage,
-                                            'Cargo Hauled': cargoHauled, 'Operation Classification': oc
-                                        })
+                        os.makedirs(dcontrolPath+'dcontrol/'+stateText)
+                    if not path.isfile(dcontrolPath + 'dcontrol/' + stateText + '/' + cityText + '.csv'):
+                        dcontrolFile = dcontrolPath + 'dcontrol/' + stateText + '/' + cityText + '.csv'
+                        with open(dcontrolFile, 'w', newline='') as csvfile:
+                            fieldnames =    [   'Business Name', 'Business Type', 
+                                                'Physical Address', 'Mailing Address', 'Telephone', 'Fax',
+                                                'Operation Status', 'USDOT Number', 
+                                                'MC Number', 'Out of Service Date', 'Entity Type', 'Legal Name',
+                                                'Bussiness Since', 'Total Trucks', 'Total Drivers', 'Carrier Operation',
+                                                'Hazardous Material', 'MCS-150 Mileage Year', 'MCS-150 DATE', 'MCS-150 MILEAGE',
+                                                'Cargo Hauled', 'Operation Classification'
+                                                # 'DBA Name', 'Physical Address', 'Phone', 'Mailing Address', 'State Carrier ID Number',
+                                                # 'MC/MX/FF Number(s)', 'DUNS Number', 'Power Units', 'Drivers', 'MCS-150 Form Date', 'MCS-150 Mileage (Year)',
+                                                # 'Operation Classification', 'Carrier Operation', 'Cargo Carried'
+                                            ]
+                            trashWriter = csv.DictWriter(csvfile, fieldnames=fieldnames)
+                            trashWriter.writeheader()
+                            for i in range(pageCount+1):
+                                if i > 0:
+                                    print("Page: " + str(i))
+                                    companyPage =  requests.get("https://dcontrol.com"+cityLink+'?page='+str(i), headers=headers)
+                                    companySoup = BeautifulSoup(companyPage.content,"lxml")
+                                    for company in companySoup.find_all("div", class_='advanced-item'):
+                                        if(company.find("a")):
+                                            companyLink = company.find_all("a")[0]['href']
+                                            companyText = company.find_all("a")[0].text
+                                            # Get Detail
+                                            detailPage =  requests.get("https://dcontrol.com"+companyLink, headers=headers)
+                                            detailSoup = BeautifulSoup(detailPage.content,"lxml")
+                                            # Variable >>>>>>>>>>>>>
+                                            bussinessName = ""
+                                            bussinessType = ""
+                                            operatingStatus = ""
+                                            usdot = ""
+                                            mcNumber = ""
+                                            oosd = ""
+                                            entityType = ""
+                                            legalName = ""
+                                            bussinessSince = ""
+                                            totalTrucks = ""
+                                            totalDrivers = ""
+                                            co = ""
+                                            hm = ""
+                                            mileage = ""
+                                            mcDate = ""
+                                            mcsMileage = ""
+                                            cargoHauled = ""
+                                            oc = ""
+                                            physicalAddress = ""
+                                            mailingAddress = ""
+                                            phone = ""
+                                            fax = ""
+                                            # Variable >>>>>>>>>>>>>
+                                            # <<<<<<<<<<< Business Name/Business Type >>>>>>>>>>>>>
+                                            profileDiv = detailSoup.findAll("div", class_="bg-white padding-10 margin-bottom-10 margin-top-10")[0]
+                                            bussinessName = profileDiv.findAll("h1")[0].text.strip('\t\r\n').lstrip(' ')
+                                            bussinessType = profileDiv.findAll("h3")[0].text.strip('\t\r\n').lstrip(' ')
+                                            # <<<<<<<<<<< Table 01 >>>>>>>>>>>>>
+                                            table01 = detailSoup.find_all("table")[0]
+                                            try:
+                                                for tr in table01.find_all('tr'):
+                                                    if tr.find_all("td")[0].text == "Operating Status":
+                                                        operatingStatus = tr.find_all("td")[1].find_all("b")[0].text
+                                                    elif tr.find_all("td")[0].text == "USDOT":
+                                                        usdot = tr.find_all("td")[1].text
+                                                    elif tr.find_all("td")[0].text == "MC NUMBER":
+                                                        mcNumber = tr.find_all("td")[1].text
+                                                    elif tr.find_all("td")[0].text == "Out of Service Date":
+                                                        oosd = tr.find_all("td")[1].text
+                                                    elif tr.find_all("td")[0].text == "Entity Type":
+                                                        entityType = tr.find_all("td")[1].text
+                                                    elif tr.find_all("td")[0].text == "Legal Name":
+                                                        legalName = tr.find_all("td")[1].text
+                                                    elif tr.find_all("td")[0].text == "Business since":
+                                                        bussinessSince = tr.find_all("td")[1].text
+                                                    elif tr.find_all("td")[0].text == "Total Trucks":
+                                                        totalTrucks = tr.find_all("td")[1].text
+                                                    elif tr.find_all("td")[0].text == "Total Drivers":
+                                                        totalDrivers = tr.find_all("td")[1].text
+                                                    elif tr.find_all("td")[0].text == "Carrier Operation":
+                                                        co = tr.find_all("td")[1].text
+                                                    elif tr.find_all("td")[0].text == "Hazardous Material":
+                                                        hm = tr.find_all("td")[1].text
+                                                    elif tr.find_all("td")[0].text == "MCS-150 Mileage Year":
+                                                        mileage = tr.find_all("td")[1].text
+                                                    elif tr.find_all("td")[0].text == "MCS-150 DATE":
+                                                        mcDate = tr.find_all("td")[1].text
+                                                    elif tr.find_all("td")[0].text == "MCS-150 MILEAGE":
+                                                        mcsMileage = tr.find_all("td")[1].text
+                                                for boxDiv in detailSoup.find_all("div", class_="box"):
+                                                    if boxDiv.find("div", class_="box-header with-border"):
+                                                        if "Cargo Hauled" in boxDiv.findAll("div", class_="box-header with-border")[0].find_all("h3")[0].text:
+                                                            for span in boxDiv.findAll("table", class_="table table-bordered")[0].findAll('tr')[0].findAll('td')[0].find_all('span'):
+                                                                cargoHauled += span.text + " - "
+                                                        if "Operation Classification" in boxDiv.findAll("div", class_="box-header with-border")[0].find_all("h3")[0].text:
+                                                            for span in boxDiv.findAll("table", class_="table table-bordered")[0].findAll('tr')[0].findAll('td')[0].find_all('span'):
+                                                                oc += span.text + " - "
+                                                        if "Physical and Mailing information" in boxDiv.findAll("div", class_="box-header with-border")[0].find_all("h3")[0].text:
+                                                            for tr in boxDiv.findAll("table", class_="table table-bordered")[0].find_all('tr'):
+                                                                if tr.find_all("td")[0].text == "Physical Address":
+                                                                    physicalAddress = tr.find_all("td")[1].text.strip('\t\r\n').lstrip(' ')
+                                                                elif tr.find_all("td")[0].text == "Mailing Address":
+                                                                    mailingAddress = tr.find_all("td")[1].text.strip('\t\r\n').lstrip(' ')
+                                                                elif tr.find_all("td")[0].text == "Telephone":
+                                                                    phone = tr.find_all("td")[1].text.strip('\t\r\n').lstrip(' ')
+                                                                elif tr.find_all("td")[0].text == "Fax":
+                                                                    fax = tr.find_all("td")[1].text.strip('\t\r\n').lstrip(' ')
+                                            except:
+                                                cc = "Error"
+                                            print(physicalAddress.strip('\t\r\n'))
+                                            trashWriter.writerow({  
+                                                'Business Name': bussinessName, 'Business Type': bussinessType, 
+                                                'Physical Address': physicalAddress, 'Mailing Address': mailingAddress, 'Telephone': phone, 'Fax': fax,
+                                                'Operation Status': operatingStatus, 'USDOT Number': usdot,
+                                                'MC Number': mcNumber, 'Out of Service Date': oosd, 'Entity Type': entityType, 'Legal Name': legalName,
+                                                'Bussiness Since': bussinessSince, 'Total Trucks': totalTrucks, 'Total Drivers': totalDrivers, 'Carrier Operation': co,
+                                                'Hazardous Material': hm, 'MCS-150 Mileage Year': mileage, 'MCS-150 DATE': mcDate, 'MCS-150 MILEAGE': mcsMileage,
+                                                'Cargo Hauled': cargoHauled, 'Operation Classification': oc
+                                            })
+                    else:
+                        print("File Already Exist")
     finishLabel = tk.Label(root, text= 'DONE!', fg='green', font=('helvetica', 12, 'bold'))
     canvas1.create_window(200, 400, window=finishLabel)
 
