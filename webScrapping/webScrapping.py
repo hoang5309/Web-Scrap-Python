@@ -205,7 +205,6 @@ def loopThroughAlphabet():
 
         label1 = tk.Label(root, text= 'DONE!', fg='green', font=('helvetica', 12, 'bold'))
         canvas1.create_window(200, 300, window=label1)
-
 def loopThroughPaginator(link, writer):
     headers = requests.utils.default_headers()
     headers.update({
@@ -223,7 +222,6 @@ def loopThroughPaginator(link, writer):
             else:
                 nextLink = nextBtn.findAll("a")[0]['href']
                 getData('https://www.crassociation.org/'+nextLink, writer)
-
 def getData(link, writer):
         print(link)
         headers = requests.utils.default_headers()
@@ -599,14 +597,63 @@ def trashComp2():
     finishLabel = tk.Label(root, text= 'DONE!', fg='green', font=('helvetica', 12, 'bold'))
     canvas1.create_window(200, 400, window=finishLabel)
 
+#www.claimspages.com/tools/fire-departments
+def claimPageFire():
+    print("Claim Page Fire Dept")
+    states = ['new-york','vermont','connecticut', 'new-jersey', 'massachusetts','new-hampshire', 'maine']
+    claimPagePath = filedialog.askdirectory()
+    claimPageFile = claimPagePath+'/'+'Claim Page Police Dept.csv'
+    with open(claimPageFile, 'w', newline='') as csvfile:
+        headers = requests.utils.default_headers()
+        headers.update({
+            'User-Agent': 'Mozilla/5.0 (X11; Ubuntu; Linux x86_64; rv:52.0) Gecko/20100101 Firefox/52.0',
+        })
+        fieldnames = ['Business Name', 'Address', 'Address Plus', 'Phone']
+        writer = csv.DictWriter(csvfile, fieldnames=fieldnames)
+        writer.writeheader()
+        for x in states:
+            print(x)
+            page = requests.get("https://www.claimspages.com/tools/police-departments/"+x, headers=headers)
+            soup = BeautifulSoup(page.content,"lxml")
+            totalPageString = soup.findAll("div", class_='page-count-mobile')[0].text.split("of")
+            totalPage = math.ceil(int(totalPageString[1])/10) + 1
+            print(totalPage)
+            for j in range(1, totalPage):
+                print("Page: " + str(j))
+                statePage = requests.get("https://www.claimspages.com/tools/police-departments/"+x+'/'+str(j), headers=headers)
+                stateSoup = BeautifulSoup(statePage.content,"lxml")
+                for companies in stateSoup.find_all('div', class_='listing-item-row-first'):
+                    title = companies.findAll("h4", class_='card-title')[0].text
+                    address = companies.findAll("div", class_='card-text')[0].text
+                    addressInfo = companies.findAll("div", class_='card-text')[1].text
+                    phone = companies.findAll("div", class_='card-text')[2].text.split("Phone: ")[1]
+                    writer.writerow({'Business Name': title, 'Address': address, 'Address Plus': addressInfo, 'Phone': phone})
+                    print(title)
+                for companies in stateSoup.find_all('div', class_='listing-item-row'):
+                    title = companies.findAll("h4", class_='card-title')[0].text
+                    address = companies.findAll("div", class_='card-text')[0].text
+                    addressInfo = companies.findAll("div", class_='card-text')[1].text
+                    phone = companies.findAll("div", class_='card-text')[2].text.split("Phone: ")[1]
+                    writer.writerow({'Business Name': title, 'Address': address, 'Address Plus': addressInfo, 'Phone': phone})
+                    print(title)
+                for companies in stateSoup.find_all('div', class_='listing-item-row-last'):
+                    title = companies.findAll("h4", class_='card-title')[0].text
+                    address = companies.findAll("div", class_='card-text')[0].text
+                    addressInfo = companies.findAll("div", class_='card-text')[1].text
+                    phone = companies.findAll("div", class_='card-text')[2].text.split("Phone: ")[1]
+                    writer.writerow({'Business Name': title, 'Address': address, 'Address Plus': addressInfo, 'Phone': phone})
+                    print(title)
+        
 truePeopleSearchBtn = tk.Button(text='True People Search',command=selectFile, bg='brown',fg='white')
 AmbulanceBtn = tk.Button(text='Ambulance',command=scrapingNPI, bg='brown',fg='white')
 CrassociationBtn = tk.Button(text='Crassociation',command=loopThroughAlphabet, bg='brown',fg='white')
 trashBtn = tk.Button(text='Trash Companies',command=trashComp2, bg='brown',fg='white')
+claimPgBtn = tk.Button(text='Claim Page',command=claimPageFire, bg='brown',fg='white')
 
 canvas1.create_window(200, 50, window=truePeopleSearchBtn)
 canvas1.create_window(200, 150, window=AmbulanceBtn)
 canvas1.create_window(200, 250, window=CrassociationBtn)
 canvas1.create_window(200, 350, window=trashBtn)
+canvas1.create_window(200, 450, window=claimPgBtn)
 
 root.mainloop()
