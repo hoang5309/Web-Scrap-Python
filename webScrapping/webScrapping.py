@@ -1,6 +1,7 @@
 import tkinter as tk
 from tkinter import filedialog, Text
 import requests
+import json
 from bs4 import BeautifulSoup
 import os
 import csv
@@ -13,7 +14,7 @@ from os import path
 
 root= tk.Tk()
 
-canvas1 = tk.Canvas(root, width = 500, height = 500)
+canvas1 = tk.Canvas(root, width = 500, height = 800)
 canvas1.pack()
 
 global crassociationPath
@@ -643,17 +644,64 @@ def claimPageFire():
                     phone = companies.findAll("div", class_='card-text')[2].text.split("Phone: ")[1]
                     writer.writerow({'Business Name': title, 'Address': address, 'Address Plus': addressInfo, 'Phone': phone})
                     print(title)
+
+def hubSpot():
+    print("HubSpot")
+    filename = filedialog.askopenfilename()
+    filePath = os.path.dirname(filename)
+    newFile = filePath+'/'+'TPS Result.csv'
+    TPSResult = []
+    TPSHeaders = []
+    with open(filename, newline='') as csvfile:
+       reader = csv.DictReader(csvfile)
+       TPSHeaders = reader.fieldnames
+       for row in reader:
+            name = 'name=' +row["First Name"] + '%20' + row["Last Name"]
+            url = "https://api.hubapi.com/engagements/v1/engagements"
+
+            querystring = {"hapikey":"5d97221d-068a-443e-8d19-b803707015b9"}
+
+            payload = json.dumps({
+                "engagement": {
+                    "active": 'true',
+                    "type": "NOTE",
+                    "timestamp": 1409172644778
+                },
+                "associations": {
+                    "contactIds": [],
+                    "companyIds": [5721879130],
+                    "dealIds": [ ],
+                    "ownerIds": [ ]
+                },
+                "attachments": [
+                    {
+                        "id": 4241968539
+                    }
+                ],
+                "metadata": {
+                    "body": "Test"
+                }
+            });
+            headers = {
+                'Content-Type': "application/json",
+                }
+
+            response = requests.request("POST", url, data=payload, headers=headers, params=querystring)
+
+            print(response.text)
         
 truePeopleSearchBtn = tk.Button(text='True People Search',command=selectFile, bg='brown',fg='white')
 AmbulanceBtn = tk.Button(text='Ambulance',command=scrapingNPI, bg='brown',fg='white')
 CrassociationBtn = tk.Button(text='Crassociation',command=loopThroughAlphabet, bg='brown',fg='white')
 trashBtn = tk.Button(text='Trash Companies',command=trashComp2, bg='brown',fg='white')
 claimPgBtn = tk.Button(text='Claim Page',command=claimPageFire, bg='brown',fg='white')
+hubspotBtn = tk.Button(text='Hubspot',command=hubSpot, bg='brown',fg='white')
 
 canvas1.create_window(200, 50, window=truePeopleSearchBtn)
 canvas1.create_window(200, 150, window=AmbulanceBtn)
 canvas1.create_window(200, 250, window=CrassociationBtn)
 canvas1.create_window(200, 350, window=trashBtn)
 canvas1.create_window(200, 450, window=claimPgBtn)
+canvas1.create_window(200, 550, window=hubspotBtn)
 
 root.mainloop()
